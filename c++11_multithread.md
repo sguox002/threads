@@ -3,14 +3,14 @@ https://thispointer.com/c-11-multithreading-part-1-three-different-ways-to-creat
 
 ## 1. thread.
 
-thread
-|__get_id: return the thread id.
-|__joinable: check if joinable, even if it is done.
-|__join: wait for thread done
-|__detach: detach the thread from the calling thread, allowing them to execute independently.
-|__swap
-|__native_handle
-|__hardware_concurrency
+thread<br/>
+|__get_id: return the thread id.<br/>
+|__joinable: check if joinable, even if it is done.<br/>
+|__join: wait for thread done<br/>
+|__detach: detach the thread from the calling thread, allowing them to execute independently.<br/>
+|__swap<br/>
+|__native_handle<br/>
+|__hardware_concurrency<br/>
 
 thread.join(): let the caller thread to wait for the completion of thread.
 - joinable: thread started.
@@ -50,20 +50,20 @@ thread mythread([]{...});
 ```
 
 - std::this_thread: refer to current thread
-it has several functions:
-|__get_id
-|__yield
-|__sleep_for
-|__sleep_until
+it has several functions:<br/>
+|__get_id<br/>
+|__yield<br/>
+|__sleep_for<br/>
+|__sleep_until<br/>
 
 ## 2, mutex:
 mutex is a lockable object that is designed to signal when critical section needs exclusive access.
-generally for a shared resource updates, we need a lock to guarantee serial access.
-|__lock
-|__unlock
-|__try_lock
-|__native_handler
-mutex itself can be used as lock.
+generally for a shared resource updates, we need a lock to guarantee serial access.<br/>
+|__lock<br/>
+|__unlock<br/>
+|__try_lock<br/>
+|__native_handler<br/>
+mutex itself can be used as lock.<br/>
 
 recursive_mutex: allow a mutex to be acquired multiple time. Only the same thread can do this.
 
@@ -87,12 +87,12 @@ unique_lock: you can call lock and unlock.
 unique_lock:
 The class unique_lock is a general-purpose mutex ownership wrapper allowing deferred locking, time-constrained attempts at locking, recursive locking, transfer of lock ownership, and use with condition variables.
 A unique lock is an object that manages a mutex object with unique ownership in both states: locked and unlocked.
-This class guarantees an unlocked status on destruction (even if not called explicitly). Therefore it is especially useful as an object with automatic duration, as it guarantees the mutex object is properly unlocked in case an exception is thrown.
-|__lock
-|__try_lock
-|__try_lock_for
-|__try_lock_until
-|__unlock
+This class guarantees an unlocked status on destruction (even if not called explicitly). Therefore it is especially useful as an object with automatic duration, as it guarantees the mutex object is properly unlocked in case an exception is thrown.<br/>
+|__lock<br/>
+|__try_lock<br/>
+|__try_lock_for<br/>
+|__try_lock_until<br/>
+|__unlock<br/>
 
 example: 
 ```cpp
@@ -144,20 +144,25 @@ Condition variables permit concurrent invocation of the wait, wait_for, wait_unt
 condition_variable is more similar to CEvent in win32.
 CEvent.notify
 CEvent.WaitForSingleObject.
-condition_variable
-|__notify_one
-|__notify_all
-|__wait
-|__wait_for
-|__wait_until
+condition_variable<br/>
+|__notify_one<br/>
+|__notify_all<br/>
+|__wait<br/>
+|__wait_for<br/>
+|__wait_until<br/>
+
 wait(unique_lock)
+
 wait(unique_lock, predicate)
+
 wait: will atomically unlock the lock and block the current thread.
+
 unblock by notify_one, notify_all
 spurious unblock: it will reacquire the lock and block again.
 predicate: it will also check the predicate
 
 notify_one/notify_all: wakeup the condition_variable.
+
 notify does not need a lock. only wait needs a lock.
 
 ```cpp
@@ -361,13 +366,13 @@ a std::future object internally stores a value that will be assigned in future a
 it also provides a mechanism to access that value i.e. using get() member function. 
 But if somebody tries to access this associated value of future through get() function before it is available, then get() function will block till value is not available.
 
-future
-|__share: get shared future.
-|__get: get value
-|__valid: check for valid shared state.
-|__wait: wait for ready.
-|__wait_for: 
-|__wait_until
+future<br/>
+|__share: get shared future.<br/>
+|__get: get value<br/>
+|__valid: check for valid shared state.<br/>
+|__wait: wait for ready.<br/>
+|__wait_for: <br/>
+|__wait_until<br/>
 
 ```cpp
 bool is_prime (int x) {
@@ -402,13 +407,13 @@ future get the value in future
 promise set the value in future.
 
 promise shares data with its associated future object. set/get pair
-promise
-|__get_future
-|__set_value
-|__set_exception
-|__set_value_at_thread_exit
-|__set_exception_at_thread_exit
-|__swap
+promise<br/>
+|__get_future<br/>
+|__set_value<br/>
+|__set_exception<br/>
+|__set_value_at_thread_exit<br/>
+|__set_exception_at_thread_exit<br/>
+|__swap<br/>
 
 std::async() does following things,
 It automatically creates a thread (Or picks from internal thread pool) and a promise object for us.
