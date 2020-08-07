@@ -1,6 +1,5 @@
-# threads
-multithreading
 # C++ thread and synchronization:
+https://thispointer.com/c-11-multithreading-part-1-three-different-ways-to-create-threads/
 
 ## 1. thread.
 
@@ -22,11 +21,33 @@ thread.join(): let the caller thread to wait for the completion of thread.
 detach release the resources for join. So if main thread is not going to wait for the thread done, you need detach it.
 if detached and want to wait for thread completion, we need use synchronization.
 You can not join after detach.
+detached thread is also called background thread or daemon thread.
+
+not calling join, main program exit will call thread destructor and terminate
+calling join/detach multiple times will cause crash since the resource are not there anymore
 
 - thread function and passing parameters to thread function
 function return value is ignored.
 all parameters by thread passed by value
 reference parameter must be wrapped using std::ref or std::cref
+thread takes:
+function pointer
+function object
+lambda function
+
+use member function of a class, we need pass:
+function address and object address.
+
+```cpp
+void func(){...}
+struct funcobj{
+	void operator()(){...}
+};
+
+thread mythread(func);
+thread mythread((funcobj());
+thread mythread([]{...});
+```
 
 - std::this_thread: refer to current thread
 it has several functions:
@@ -89,7 +110,9 @@ void print_block (int n, char c) {
 - function done, the lock is unlocked automatically.
 so when spawn several threads, they will one by one gain the access and the output will not mess up.
 
-## 4. condition_variable:
+## 4. condition_variable
+condition variable is a kind of event mechanism for signaling between threads.
+
 A condition variable is an object able to block the calling thread until notified to resume.
 
 It uses a unique_lock (over a mutex) to lock the thread when one of its wait functions is called. The thread remains blocked until woken up by another thread that calls a notification function on the same condition_variable object.
@@ -317,7 +340,102 @@ we want to output firstsecondthird whatever the call sequence is.
 
 - lambda function needs ready variable to be static for capturing, not very clear about it
 - use while(..) wait... it is equivalent wait(lck,predicate)
+- use [this]{} this as capture
 - we change ready, ready is shared variable and need access restriction
 - first if not locker protected, this will cause deadlock. (since other thread may change it at the same time).
 - need use notify_all so that each thread can receive notification.
+
+Some points that must be taken note of are:
+
+Mutex are used for mutual exclusion i.e to safe gaurd the critical sections of a code.
+Semaphone/condition_variable are used for thread synchronisation(which is what we want to achieve here).
+Mutex have ownership assigned with them, that is to say, the thread that locks a mutex must only unlock it. Also, we must not unlock a mutex that has not been locked (This is what most programs have got wrong).
+If the mutex is not used as said above, the behavior is undefined, which however in our case produces the required result.
+
 	
+## future & promise
+future can be used with asynch, packaged_task, promise.
+Many times we encounter a situation where we want a thread to return a result.
+
+a std::future object internally stores a value that will be assigned in future and 
+it also provides a mechanism to access that value i.e. using get() member function. 
+But if somebody tries to access this associated value of future through get() function before it is available, then get() function will block till value is not available.
+
+future
+|__share: get shared future.
+|__get: get value
+|__valid: check for valid shared state.
+|__wait: wait for ready.
+|__wait_for: 
+|__wait_until
+
+```cpp
+bool is_prime (int x) {
+  for (int i=2; i<x; ++i) if (x%i==0) return false;
+  return true;
+}
+
+int main ()
+{
+  // call function asynchronously:
+  std::future<bool> fut = std::async (is_prime,444444443); 
+
+  // do something while waiting for function to set future:
+  std::cout << "checking, please wait";
+  std::chrono::milliseconds span (100);
+  while (fut.wait_for(span)==std::future_status::timeout)
+    std::cout << '.' << std::flush;
+
+  bool x = fut.get();     // retrieve return value
+
+  std::cout << "\n444444443 " << (x?"is":"is not") << " prime.\n";
+
+  return 0;
+}
+```
+
+- async: call function asynchronously
+- The value returned by fn can be accessed through the future object returned (by calling its member future::get).
+
+std::promise is also a class template and its object promises to set the value in future. Each std::promise object has an associated std::future object that will give the value once set by the std::promise object.
+future get the value in future
+promise set the value in future.
+
+promise shares data with its associated future object. set/get pair
+promise
+|__get_future
+|__set_value
+|__set_exception
+|__set_value_at_thread_exit
+|__set_exception_at_thread_exit
+|__swap
+
+std::async() does following things,
+It automatically creates a thread (Or picks from internal thread pool) and a promise object for us.
+Then passes the std::promise object to thread function and returns the associated std::future object.
+When our passed argument function exits then its value will be set in this promise object, so eventually return value will be available in std::future object
+
+async can also accept: function pointer, function object, lambda function.
+
+```cpp
+void print_int (std::future<int>& fut) {
+  int x = fut.get();
+  std::cout << "value: " << x << '\n';
+}
+
+int main ()
+{
+  std::promise<int> prom;                      // create promise
+
+  std::future<int> fut = prom.get_future();    // engagement with future
+
+  std::thread th1 (print_int, std::ref(fut));  // send future to new thread
+
+  prom.set_value (10);                         // fulfill promise
+                                               // (synchronizes with getting the future)
+  th1.join();
+  return 0;
+}
+```
+
+
